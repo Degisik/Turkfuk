@@ -36,6 +36,20 @@ Türkçe Q Legacy'de de. (Düzeni `⌥` katmanında Türkçe harf taşıyanlar i
 
 ## Kurulum
 
+### Hazır paket
+
+[Sürümler sayfasından](https://github.com/Degisik/Turkfuk/releases) `.dmg` dosyasını indir,
+`Turkfuk.app`'i `Applications`'a sürükle.
+
+### Homebrew
+
+```bash
+brew tap Degisik/turkfuk
+brew install --cask turkfuk
+```
+
+### Kaynaktan
+
 ```bash
 git clone https://github.com/Degisik/Turkfuk.git
 cd Turkfuk
@@ -44,12 +58,20 @@ cd Turkfuk
 
 Kurulum sırasında iki şey sorulur: sistem açılışında otomatik başlasın mı, menü çubuğuna
 simge eklensin mi. Karabiner-Elements'te aynı işi yapan bir kural varsa onu da tespit edip
-kaldırmayı önerir.
+kaldırmayı önerir. Kaldırmak için `./uninstall.sh`.
 
-Kurulduktan sonra **Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik** altında
-Turkfuk'a izin vermen gerekir. Bu izin olmadan tuşlar yakalanamaz.
+## Kurulumdan sonra iki adım
 
-Kaldırmak için: `./uninstall.sh`
+**1. Gatekeeper.** Uygulama Apple tarafından notarize edilmedi, ilk açılışta engellenir.
+Sistem Ayarları → Gizlilik ve Güvenlik → aşağıdaki *"Turkfuk yine de açılsın"* düğmesi.
+Ya da:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Turkfuk.app
+```
+
+**2. Erişilebilirlik izni.** Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik →
+Turkfuk. Bu izin olmadan tuşlar yakalanamaz.
 
 ## Ayarlar
 
@@ -78,11 +100,18 @@ defaults write com.degisik.turkfuk showMenuBarIcon -bool true
 Xcode gerekmez, Command Line Tools yeter.
 
 ```bash
+./Tools/make-cert.sh   # bir kez: sabit imza sertifikası
 ./build.sh             # yerel mimari
 ./build.sh universal   # arm64 + x86_64
+./make-dmg.sh beta     # dağıtılabilir .dmg
 ```
 
 Çıktı: `dist/Turkfuk.app`
+
+`make-cert.sh` neden gerekli: macOS erişilebilirlik iznini uygulamanın imzasına bağlıyor.
+Ad-hoc imza her derlemede değiştiği için izin her seferinde düşer. Sabit bir sertifikayla
+imza değişmez, izni bir kez verirsin. Sertifika Apple tarafından tanınmaz — yalnızca yerel
+izin kalıcılığı sağlar, Gatekeeper'ı geçirmez.
 
 ## Gereksinimler
 

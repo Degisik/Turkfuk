@@ -48,8 +48,17 @@ mkdir -p "$ICONSET"
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
 rm -rf .buildtmp
 
-echo "==> imzalaniyor (ad-hoc)"
-codesign --force --sign - "$APP"
+echo "==> imzalaniyor"
+# Sabit sertifika varsa onu kullan: macOS erisilebilirlik iznini imzaya bagliyor,
+# ad-hoc imza her derlemede degistigi icin izin her seferinde dusuyor.
+IDENTITY="${TURKFUK_CERT_NAME:-Turkfuk Self Signed}"
+if security find-identity -v -p codesigning 2>/dev/null | grep -qF "$IDENTITY"; then
+  codesign --force --sign "$IDENTITY" "$APP"
+  echo "   imza: $IDENTITY"
+else
+  codesign --force --sign - "$APP"
+  echo "   imza: ad-hoc — sabit imza icin: ./Tools/make-cert.sh"
+fi
 
 echo
 echo "hazir: $APP  (surum $VERSION)"
