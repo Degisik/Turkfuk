@@ -45,8 +45,13 @@ Türkçe Q Legacy'de de. (Düzeni `⌥` katmanında Türkçe harf taşıyanlar i
 
 ```bash
 brew tap Degisik/turkfuk
-brew install --cask turkfuk
+brew trust degisik/turkfuk
+brew install --cask --no-quarantine turkfuk
 ```
+
+`brew trust` gerekli çünkü Homebrew üçüncü taraf tap'lerden cask yüklemeyi varsayılan
+olarak reddediyor. `--no-quarantine` ise uygulama notarize olmadığı için Gatekeeper
+adımını atlatır; onsuz kurarsan aşağıdaki adımı elle yapman gerekir.
 
 ### Kaynaktan
 
