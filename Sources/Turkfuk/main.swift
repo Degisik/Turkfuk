@@ -55,6 +55,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+// Derleme zamani simge uretimi: build.sh bu bayrakla cagirir.
+if let i = CommandLine.arguments.firstIndex(of: "--write-iconset"),
+   i + 1 < CommandLine.arguments.count {
+    _ = NSApplication.shared
+    try IconArt.iconsetYaz(URL(fileURLWithPath: CommandLine.arguments[i + 1]))
+    exit(0)
+}
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate

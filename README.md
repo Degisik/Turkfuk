@@ -57,9 +57,15 @@ Menü çubuğu simgesinden:
 
 | Ayar | Ne yapar |
 |---|---|
-| Aç / Kapat | Uzun basımı devre dışı bırakır (`⌃⌥⌘T`) |
-| Eşik | Türkçe harfin devreye girmesi için gereken süre (80–300 ms) |
+| Aç / Kapat | Uzun basımı devre dışı bırakır |
+| Kısayol | Aç/kapat kısayolunu değiştirir veya kaldırır (varsayılan `⌃⌥⌘T`) |
+| Genel eşik | Bütün harfler için taban süre (80–300 ms, ya da özel değer) |
+| Harf eşikleri | Her harfe ayrı süre. Parmağın uzun kaldığı harfte yükselt |
 | Girişte başlat | `SMAppService` ile oturum açılışına ekler |
+
+Harf eşikleri neden var: her parmağın tuşta kalma süresi aynı değil. Sol orta parmakla
+basılan `c` genelde `i`'den uzun kalır; genel eşiği düşük tutup yalnızca `c`'yi
+yükselterek ikisini ayrı ayarlayabilirsin.
 
 Menü çubuğu simgesini kapattıysan geri açmak için:
 

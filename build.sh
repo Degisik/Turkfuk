@@ -40,6 +40,12 @@ fi
 
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
+
+echo "==> simge uretiliyor"
+ICONSET=".buildtmp/AppIcon.iconset"
+mkdir -p "$ICONSET"
+"$APP/Contents/MacOS/Turkfuk" --write-iconset "$ICONSET"
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
 rm -rf .buildtmp
 
 echo "==> imzalaniyor (ad-hoc)"

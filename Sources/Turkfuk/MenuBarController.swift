@@ -9,9 +9,7 @@ final class MenuBarController: NSObject {
     func install() {
         guard Settings.shared.showMenuBarIcon, statusItem == nil else { return }
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.image = NSImage(systemSymbolName: "character.cursor.ibeam",
-                                     accessibilityDescription: "Turkfuk")
-        item.button?.image?.isTemplate = true
+        item.button?.image = IconArt.menuCubuguSimgesi()
         statusItem = item
         refresh()
     }
