@@ -9,6 +9,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBar.install()
         izleOnplandakiUygulama()
 
+        // Kurulum betigi girise ekleme istediyse burada kaydediyoruz:
+        // SMAppService cagrisini uygulamanin kendisi yapmak zorunda.
+        if Settings.shared.launchAtLogin && !LaunchAtLogin.isEnabled {
+            LaunchAtLogin.set(true)
+        }
+
         if Permissions.isTrusted {
             LongPressEngine.shared.start()
         } else {
