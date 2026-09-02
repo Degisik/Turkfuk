@@ -32,7 +32,12 @@ echo "Turkfuk — Turkish Keylayout for US Keylayouts"
 echo "============================================="
 echo
 
-./build.sh "${1:-}"
+# Kurulan surum varsayilan olarak evrensel olsun — install.sh'in kendisi derledigi
+# icin "./build.sh universal && ./install.sh" zinciri aksi halde evrenseli eziyordu.
+# Hizli yineleme icin: ./install.sh native
+MIMARI="${1:-universal}"
+[ "$MIMARI" = "native" ] && MIMARI=""
+./build.sh "$MIMARI"
 echo
 
 if pgrep -x Turkfuk >/dev/null 2>&1; then
