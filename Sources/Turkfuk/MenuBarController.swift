@@ -43,6 +43,8 @@ final class MenuBarController: NSObject {
         ac.state = Settings.shared.enabled ? .on : .off
         menu.addItem(ac)
 
+        menu.addItem(kisayolMenusu())
+
         menu.addItem(.separator())
         menu.addItem(genelEsikMenusu())
         menu.addItem(harfEsikleriMenusu())
@@ -55,6 +57,17 @@ final class MenuBarController: NSObject {
         menu.addItem(.separator())
         menu.addItem(madde("Turkfuk'tan çık", #selector(cik)))
         return menu
+    }
+
+    /// Ac/kapat kisayolu.
+    private func kisayolMenusu() -> NSMenuItem {
+        let hk = Settings.shared.hotkey
+        let ust = NSMenuItem(title: "Kısayol: \(hk?.display ?? "yok")", action: nil, keyEquivalent: "")
+        let alt = NSMenu()
+        alt.addItem(madde("Kısayolu değiştir…", #selector(kisayolDegistir)))
+        if hk != nil { alt.addItem(madde("Kısayolu kaldır", #selector(kisayolKaldir))) }
+        ust.submenu = alt
+        return ust
     }
 
     /// Butun harfler icin gecerli olan taban esik.
@@ -184,4 +197,29 @@ final class MenuBarController: NSObject {
     }
 
     @objc private func harfEsikleriSifirla() { Settings.shared.perKey = [:] }
+
+    @objc private func kisayolKaldir() { Settings.shared.setHotkey(nil) }
+
+    @objc private func kisayolDegistir() {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Yeni kısayol"
+        alert.informativeText = """
+            Kullanmak istediğin tuş birleşimine bas.
+            En az bir değiştirici gerekli: ⌘ ⌃ ⌥ ⇧
+            Vazgeçmek için Esc.
+            """
+        alert.addButton(withTitle: "Vazgeç")
+
+        // Kayit motorun kendi olay yakalayicisindan geliyor; pencere odagina bagli degil.
+        LongPressEngine.shared.beginHotkeyRecording { yeni in
+            DispatchQueue.main.async {
+                if let yeni { Settings.shared.setHotkey(yeni) }
+                NSApp.stopModal()
+            }
+        }
+        alert.runModal()
+        LongPressEngine.shared.endHotkeyRecording()
+        refresh()
+    }
 }

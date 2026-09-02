@@ -41,6 +41,27 @@ final class LongPressEngine {
 
     private(set) var isRunning = false
 
+    /// Kisayol kaydi: ana is parcaciginda kurulur, tap parcaciginda okunur.
+    private let recLock = NSLock()
+    private var recorder: ((Hotkey?) -> Void)?
+
+    func beginHotkeyRecording(_ done: @escaping (Hotkey?) -> Void) {
+        recLock.lock(); recorder = done; recLock.unlock()
+    }
+
+    func endHotkeyRecording() {
+        recLock.lock(); recorder = nil; recLock.unlock()
+    }
+
+    private func takeRecorder() -> ((Hotkey?) -> Void)? {
+        recLock.lock(); defer { recLock.unlock() }
+        let r = recorder; recorder = nil; return r
+    }
+
+    private var isRecording: Bool {
+        recLock.lock(); defer { recLock.unlock() }; return recorder != nil
+    }
+
     // MARK: - Yasam dongusu
 
     func start() {
@@ -99,6 +120,17 @@ final class LongPressEngine {
         let flags = event.flags
         let code = event.getIntegerValueField(.keyboardEventKeycode)
 
+        // Kisayol kaydi acikken tuslar uygulamaya gitmez, kombinasyon yakalanir.
+        if isRecording {
+            guard type == .keyDown else { return Unmanaged.passUnretained(event) }
+            if code == 53 {                                  // Esc — vazgec
+                takeRecorder()?(nil)
+            } else if Hotkey.mask(from: flags) != 0 {         // en az bir degistirici sart
+                takeRecorder()?(Hotkey(keyCode: code, flags: Hotkey.mask(from: flags)))
+            }
+            return nil
+        }
+
         if type == .flagsChanged {
             // ⌘/⌃/⌥ devreye girdiyse bekleyen harfi hemen bas.
             if flags.contains(.maskCommand) || flags.contains(.maskControl)
@@ -118,13 +150,11 @@ final class LongPressEngine {
 
         guard type == .keyDown else { return Unmanaged.passUnretained(event) }
 
-        // ⌃⌥⌘T — ac/kapat
-        if code == 17,
-           flags.contains(.maskCommand), flags.contains(.maskControl), flags.contains(.maskAlternate) {
-            DispatchQueue.main.async {
-                Settings.shared.enabled.toggle()
-                NotificationCenter.default.post(name: Settings.changed, object: nil)
-            }
+        // Ac/kapat kisayolu. Tam eslesme araniyor ki ustune Shift eklenince tetiklenmesin.
+        if let hk = Settings.shared.hotkey,
+           code == hk.keyCode, Hotkey.mask(from: flags) == hk.flags {
+            flushPending()
+            DispatchQueue.main.async { Settings.shared.enabled.toggle() }
             return nil
         }
 

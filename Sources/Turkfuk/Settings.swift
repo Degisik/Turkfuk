@@ -14,6 +14,9 @@ final class Settings {
         case launchAtLogin    = "launchAtLogin"
         case useOptionOutput  = "useOptionOutput"   // unicode yerine ⌥ tusu simulasyonu
         case disabledApps     = "disabledApps"      // bundle id listesi
+        case hotkeyKeyCode    = "hotkeyKeyCode"
+        case hotkeyFlags      = "hotkeyFlags"
+        case hotkeyEnabled    = "hotkeyEnabled"
     }
 
     private init() {
@@ -25,6 +28,9 @@ final class Settings {
             Key.launchAtLogin.rawValue: false,
             Key.useOptionOutput.rawValue: false,
             Key.disabledApps.rawValue: [String](),
+            Key.hotkeyKeyCode.rawValue: 17,                                   // t
+            Key.hotkeyFlags.rawValue: Hotkey.cmd | Hotkey.ctrl | Hotkey.opt,  // ⌃⌥⌘
+            Key.hotkeyEnabled.rawValue: true,
         ])
     }
 
@@ -73,6 +79,24 @@ final class Settings {
         var m = perKey
         if let ms { m[letter] = max(40, min(1000, ms)) } else { m.removeValue(forKey: letter) }
         perKey = m
+    }
+
+    /// Ac/kapat kisayolu. Kapaliysa nil.
+    var hotkey: Hotkey? {
+        guard d.bool(forKey: Key.hotkeyEnabled.rawValue) else { return nil }
+        return Hotkey(keyCode: Int64(d.integer(forKey: Key.hotkeyKeyCode.rawValue)),
+                      flags: d.integer(forKey: Key.hotkeyFlags.rawValue))
+    }
+
+    func setHotkey(_ hk: Hotkey?) {
+        if let hk {
+            d.set(Int(hk.keyCode), forKey: Key.hotkeyKeyCode.rawValue)
+            d.set(hk.flags, forKey: Key.hotkeyFlags.rawValue)
+            d.set(true, forKey: Key.hotkeyEnabled.rawValue)
+        } else {
+            d.set(false, forKey: Key.hotkeyEnabled.rawValue)
+        }
+        notify()
     }
 
     static let changed = Notification.Name("TurkfukSettingsChanged")
