@@ -68,6 +68,13 @@ final class Settings {
         perKey[letter] ?? threshold
     }
 
+    /// nil verilirse harf genel esige doner.
+    func setThreshold(_ ms: Int?, for letter: String) {
+        var m = perKey
+        if let ms { m[letter] = max(40, min(1000, ms)) } else { m.removeValue(forKey: letter) }
+        perKey = m
+    }
+
     static let changed = Notification.Name("TurkfukSettingsChanged")
     private func notify() {
         NotificationCenter.default.post(name: Settings.changed, object: nil)
