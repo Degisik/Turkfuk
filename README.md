@@ -2,6 +2,8 @@
 
 **Turkish Keylayout for US Keylayouts**
 
+🇹🇷 Türkçe · 🇬🇧 [English](README.en.md)
+
 ANSI/US klavyede Türkçe harfleri yazmanın en kısa yolu: harfe basılı tut, Türkçesi çıksın.
 
 ```
