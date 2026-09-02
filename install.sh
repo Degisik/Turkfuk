@@ -80,8 +80,6 @@ echo "==> baslatiliyor"
 open "$HEDEF"
 sleep 2
 
-if ! /usr/bin/osascript -e 'tell application "System Events" to return true' >/dev/null 2>&1; then :; fi
-
 cat <<'EOF'
 
 Kurulum bitti.
