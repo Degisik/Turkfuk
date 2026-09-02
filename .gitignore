@@ -1,0 +1,4 @@
+dist/
+.buildtmp/
+.build/
+.DS_Store
