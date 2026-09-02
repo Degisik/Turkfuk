@@ -6,9 +6,24 @@ cd "$(dirname "$0")"
 APP_ID="com.degisik.turkfuk"
 HEDEF="/Applications/Turkfuk.app"
 
-sor() {  # sor "soru" varsayilan(E/H) -> 0 = evet
-  local soru="$1" var="$2" cevap
-  read -r -p "$soru [$( [ "$var" = E ] && echo 'E/h' || echo 'e/H' )] " cevap </dev/tty || cevap=""
+# sor "soru" varsayilan(E/H) -> 0 = evet
+# Once /dev/tty, olmazsa stdin. Ikisi de yoksa varsayilana duser ama bunu
+# sessizce yapmaz, ekrana yazar. TURKFUK_YES=1 ile hepsi varsayilan kabul edilir.
+sor() {
+  local soru="$1" var="$2" cevap="" ipucu
+  ipucu=$( [ "$var" = E ] && echo 'E/h' || echo 'e/H' )
+
+  if [ -n "${TURKFUK_YES:-}" ]; then
+    echo "$soru [$ipucu] -> $var (TURKFUK_YES)"
+  elif { exec 3</dev/tty; } 2>/dev/null; then
+    read -r -u 3 -p "$soru [$ipucu] " cevap || cevap=""
+    exec 3<&-
+  elif [ -t 0 ]; then
+    read -r -p "$soru [$ipucu] " cevap || cevap=""
+  else
+    echo "$soru [$ipucu] -> $var  (terminal yok, varsayılan kullanıldı)"
+  fi
+
   cevap="${cevap:-$var}"
   [[ "$cevap" =~ ^[EeYy] ]]
 }
