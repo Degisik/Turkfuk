@@ -17,6 +17,7 @@ final class Settings {
         case hotkeyKeyCode    = "hotkeyKeyCode"
         case hotkeyFlags      = "hotkeyFlags"
         case hotkeyEnabled    = "hotkeyEnabled"
+        case mechanism        = "mechanism"         // "beklet" | "anlik"
     }
 
     private init() {
@@ -31,6 +32,7 @@ final class Settings {
             Key.hotkeyKeyCode.rawValue: 17,                                   // t
             Key.hotkeyFlags.rawValue: Hotkey.cmd | Hotkey.ctrl | Hotkey.opt,  // ⌃⌥⌘
             Key.hotkeyEnabled.rawValue: true,
+            Key.mechanism.rawValue: Mechanism.beklet.rawValue,
         ])
     }
 
@@ -79,6 +81,21 @@ final class Settings {
         var m = perKey
         if let ms { m[letter] = max(40, min(1000, ms)) } else { m.removeValue(forKey: letter) }
         perKey = m
+    }
+
+    /// Uzun basimin tusu nasil ele aldigi.
+    enum Mechanism: String {
+        /// Tus bastirilir, harf birakista ya da esikte cikar. Titreme yok,
+        /// ama uygulama tusun basili kaldigini hic gormez — oyunlar calismaz.
+        case beklet
+        /// Tus dogrudan gecirilir, harf aninda cikar; esikte geri silinip
+        /// Turkcesi yazilir. Tus gercekten basili kalir, oyunlar calisir.
+        case anlik
+    }
+
+    var mechanism: Mechanism {
+        get { Mechanism(rawValue: d.string(forKey: Key.mechanism.rawValue) ?? "") ?? .beklet }
+        set { d.set(newValue.rawValue, forKey: Key.mechanism.rawValue); notify() }
     }
 
     /// Ac/kapat kisayolu. Kapaliysa nil.

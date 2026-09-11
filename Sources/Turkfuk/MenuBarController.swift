@@ -45,6 +45,7 @@ final class MenuBarController: NSObject {
         menu.addItem(kisayolMenusu())
 
         menu.addItem(.separator())
+        menu.addItem(mekanizmaMenusu())
         menu.addItem(genelEsikMenusu())
         menu.addItem(harfEsikleriMenusu())
         menu.addItem(uygulamaIstisnalariMenusu())
@@ -131,6 +132,33 @@ final class MenuBarController: NSObject {
         o.representedObject = key.ascii
         sub.addItem(o)
         return sub
+    }
+
+    /// Tusun nasil ele alindigi. Oyunlarda tek fark yaratan ayar bu.
+    private func mekanizmaMenusu() -> NSMenuItem {
+        let m = Settings.shared.mechanism
+        let ust = NSMenuItem(title: "Mekanizma: \(m == .beklet ? "titremesiz" : "anlık")",
+                             action: nil, keyEquivalent: "")
+        let alt = NSMenu()
+
+        let a = madde("Titremesiz — harf tuş bırakılınca çıkar", #selector(mekanizmaBeklet))
+        a.state = m == .beklet ? .on : .off
+        alt.addItem(a)
+
+        let b = madde("Anlık — harf hemen çıkar, eşikte Türkçesiyle değişir", #selector(mekanizmaAnlik))
+        b.state = m == .anlik ? .on : .off
+        alt.addItem(b)
+
+        alt.addItem(.separator())
+        let not = NSMenuItem(title: m == .beklet
+            ? "Oyunlarda tuş basılı kalmaz — istisna eklemen gerekir"
+            : "Oyunlarda tuş basılı kalır — istisnaya gerek yok",
+            action: nil, keyEquivalent: "")
+        not.isEnabled = false
+        alt.addItem(not)
+
+        ust.submenu = alt
+        return ust
     }
 
     /// Belirli uygulamalarda uzun basimi kapatir. Oyunlar icin gerekli: oyun
@@ -230,6 +258,9 @@ final class MenuBarController: NSObject {
     @objc private func harfEsikleriSifirla() { Settings.shared.perKey = [:] }
 
     @objc private func kisayolKaldir() { Settings.shared.setHotkey(nil) }
+
+    @objc private func mekanizmaBeklet() { Settings.shared.mechanism = .beklet }
+    @objc private func mekanizmaAnlik()  { Settings.shared.mechanism = .anlik }
 
     @objc private func onplandakiniDegistir() {
         let id = LongPressEngine.shared.onplandaki.bundleID

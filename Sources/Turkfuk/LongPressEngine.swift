@@ -143,8 +143,11 @@ final class LongPressEngine {
         if type == .keyUp {
             if let p = pending, code == p.key.keyCode {
                 cancelTimer()
-                if !p.consumed { postPlain(p) }
                 pending = nil
+                if Settings.shared.mechanism == .anlik {
+                    return Unmanaged.passUnretained(event)   // gercek keyUp gecmeli
+                }
+                if !p.consumed { postPlain(p) }
                 return nil                      // keyDown'i yuttugumuz icin keyUp da yutulur
             }
             return Unmanaged.passUnretained(event)
@@ -171,8 +174,9 @@ final class LongPressEngine {
         // Sirayi garanti altina almak icin yeni tusu gecirmek yerine kopyasini basiyoruz.
         var flushed = false
         if pending != nil {
+            let beklet = Settings.shared.mechanism != .anlik
             flushPending()
-            flushed = true
+            flushed = beklet
         }
 
         guard isActive(), let key = TurkishKeys.byKeyCode[code], isPlainOrShift(flags) else {
@@ -187,13 +191,24 @@ final class LongPressEngine {
         let upper = flags.contains(.maskShift) != flags.contains(.maskAlphaShift)
         pending = Pending(key: key, uppercase: upper, consumed: false)
         scheduleTimer(ms: Settings.shared.threshold(for: key.ascii))
-        return nil
+
+        // Anlik modda olay bastirilmaz: tus gercekten basili kalir, bu yuzden
+        // oyunlar tusun tutuldugunu gorur. Bedeli, esikte harfin silinip
+        // yerine Turkcesinin yazilmasi — yani gorunur bir titreme.
+        return Settings.shared.mechanism == .anlik ? Unmanaged.passUnretained(event) : nil
     }
 
     /// Uzun basim suresi doldu: Turkce harfi bas.
     private func timerFired() {
         guard var p = pending, !p.consumed else { return }
-        if Settings.shared.useOptionOutput {
+        if Settings.shared.mechanism == .anlik {
+            // Harf zaten yazildi: geri al, sonra Turkcesini koy. Yerine koyarken
+            // SADECE keyDown gonderiliyor — sahte bir keyUp, tusu hala basili
+            // tutan oyuna "biraktin" der ve karakteri durdururdu.
+            postBackspace()
+            postKey(keyCode: p.key.keyCode, uppercase: p.uppercase,
+                    text: p.uppercase ? p.key.upper : p.key.lower, downOnly: true)
+        } else if Settings.shared.useOptionOutput {
             postOptionKey(p.key.keyCode, uppercase: p.uppercase)
         } else {
             postTurkish(p)
@@ -206,7 +221,8 @@ final class LongPressEngine {
     private func flushPending() {
         cancelTimer()
         guard let p = pending else { return }
-        if !p.consumed { postPlain(p) }
+        // Anlik modda harf zaten cikmisti, telafi gerekmiyor.
+        if Settings.shared.mechanism != .anlik, !p.consumed { postPlain(p) }
         pending = nil
     }
 
@@ -256,10 +272,14 @@ final class LongPressEngine {
     /// Tus kodu HER ZAMAN basilan harfin gercek kodu olmali. Sabit 0 kullanmak
     /// (ANSI'de "a" tusu) metin alanlarinda fark ettirmez ama tus kodunu okuyan
     /// her uygulamaya — oyunlar, tus atama ekranlari — yanlis tus bildirir.
-    private func postKey(keyCode: Int64, uppercase: Bool, text: String?) {
+    private func postBackspace() {
+        postKey(keyCode: 51, uppercase: false, text: nil)   // kVK_Delete
+    }
+
+    private func postKey(keyCode: Int64, uppercase: Bool, text: String?, downOnly: Bool = false) {
         let src = CGEventSource(stateID: .privateState)
         let flags: CGEventFlags = uppercase ? [.maskShift] : []
-        for isDown in [true, false] {
+        for isDown in (downOnly ? [true] : [true, false]) {
             guard let e = CGEvent(keyboardEventSource: src,
                                   virtualKey: CGKeyCode(keyCode), keyDown: isDown) else { continue }
             e.flags = flags
