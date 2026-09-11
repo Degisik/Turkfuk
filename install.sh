@@ -13,13 +13,17 @@ sor() {
   local soru="$1" var="$2" cevap="" ipucu
   ipucu=$( [ "$var" = E ] && echo 'E/h' || echo 'e/H' )
 
+  # Hicbir akista terminal yoksa HIC okumaya kalkma: /dev/tty acilabilir ama
+  # okuma sonsuza kadar bloke olabilir (arka planda calisan betiklerde oldu).
   if [ -n "${TURKFUK_YES:-}" ]; then
     echo "$soru [$ipucu] -> $var (TURKFUK_YES)"
-  elif { exec 3</dev/tty; } 2>/dev/null; then
-    read -r -u 3 -p "$soru [$ipucu] " cevap || cevap=""
-    exec 3<&-
-  elif [ -t 0 ]; then
-    read -r -p "$soru [$ipucu] " cevap || cevap=""
+  elif [ -t 0 ] || [ -t 1 ] || [ -t 2 ]; then
+    if { exec 3</dev/tty; } 2>/dev/null; then
+      read -r -u 3 -p "$soru [$ipucu] " cevap || cevap=""
+      exec 3<&-
+    else
+      read -r -p "$soru [$ipucu] " cevap || cevap=""
+    fi
   else
     echo "$soru [$ipucu] -> $var  (terminal yok, varsayılan kullanıldı)"
   fi

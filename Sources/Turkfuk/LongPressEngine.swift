@@ -21,7 +21,8 @@ final class LongPressEngine {
     private struct Pending {
         let key: TurkishKey
         let uppercase: Bool
-        var consumed: Bool      // Turkce harf basildi mi
+        var consumed: Bool          // Turkce harf basildi mi
+        var passedThrough: Bool     // gercek olaylar uygulamaya ulasti mi
     }
 
     private var tap: CFMachPort?
@@ -144,11 +145,11 @@ final class LongPressEngine {
             if let p = pending, code == p.key.keyCode {
                 cancelTimer()
                 pending = nil
-                if Settings.shared.mechanism == .anlik {
-                    return Unmanaged.passUnretained(event)   // gercek keyUp gecmeli
-                }
+                // Uygulama gercek keyDown'lari gorduyse keyUp'i da gormeli,
+                // yoksa tus sonsuza kadar basili sanilir.
+                if p.passedThrough { return Unmanaged.passUnretained(event) }
                 if !p.consumed { postPlain(p) }
-                return nil                      // keyDown'i yuttugumuz icin keyUp da yutulur
+                return nil
             }
             return Unmanaged.passUnretained(event)
         }
@@ -165,8 +166,22 @@ final class LongPressEngine {
 
         let autorepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
 
-        // Bekleyen harfin otomatik tekrari: yut, zamanlayiciyi beklemeye devam et.
-        if let p = pending, code == p.key.keyCode, autorepeat { return nil }
+        // Bekleyen harfin otomatik tekrari.
+        if let p = pending, code == p.key.keyCode, autorepeat {
+            // Esik dolmadan tekrar olmaz: hangi harf oldugu henuz belli degil.
+            guard p.consumed else { return nil }
+            switch Settings.shared.repeatLetter {
+            case .orijinal:
+                // Gercek olay gecer: hem orijinal harf tekrarlar hem de tusun
+                // basili oldugu uygulamaya surekli yeniden bildirilir.
+                pending?.passedThrough = true
+                return Unmanaged.passUnretained(event)
+            case .turkce:
+                postKey(keyCode: p.key.keyCode, uppercase: p.uppercase,
+                        text: p.uppercase ? p.key.upper : p.key.lower, downOnly: true)
+                return nil
+            }
+        }
         // Ayni tusun keyUp'siz ikinci basimi (kacan olay): asagidaki genel yol
         // bekleyeni duz haliyle basip yeni bir bekleme baslatir.
 
@@ -189,7 +204,8 @@ final class LongPressEngine {
         }
 
         let upper = flags.contains(.maskShift) != flags.contains(.maskAlphaShift)
-        pending = Pending(key: key, uppercase: upper, consumed: false)
+        pending = Pending(key: key, uppercase: upper, consumed: false,
+                          passedThrough: Settings.shared.mechanism == .anlik)
         scheduleTimer(ms: Settings.shared.threshold(for: key.ascii))
 
         // Anlik modda olay bastirilmaz: tus gercekten basili kalir, bu yuzden

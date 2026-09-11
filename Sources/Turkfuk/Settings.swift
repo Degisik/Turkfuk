@@ -18,6 +18,7 @@ final class Settings {
         case hotkeyFlags      = "hotkeyFlags"
         case hotkeyEnabled    = "hotkeyEnabled"
         case mechanism        = "mechanism"         // "beklet" | "anlik"
+        case repeatLetter     = "repeatLetter"      // "orijinal" | "turkce"
     }
 
     private init() {
@@ -32,7 +33,8 @@ final class Settings {
             Key.hotkeyKeyCode.rawValue: 17,                                   // t
             Key.hotkeyFlags.rawValue: Hotkey.cmd | Hotkey.ctrl | Hotkey.opt,  // ⌃⌥⌘
             Key.hotkeyEnabled.rawValue: true,
-            Key.mechanism.rawValue: Mechanism.beklet.rawValue,
+            Key.mechanism.rawValue: Mechanism.anlik.rawValue,
+            Key.repeatLetter.rawValue: RepeatLetter.orijinal.rawValue,
         ])
     }
 
@@ -94,8 +96,22 @@ final class Settings {
     }
 
     var mechanism: Mechanism {
-        get { Mechanism(rawValue: d.string(forKey: Key.mechanism.rawValue) ?? "") ?? .beklet }
+        get { Mechanism(rawValue: d.string(forKey: Key.mechanism.rawValue) ?? "") ?? .anlik }
         set { d.set(newValue.rawValue, forKey: Key.mechanism.rawValue); notify() }
+    }
+
+    /// Turkce harf yazildiktan sonra tus hala basiliysa ne tekrarlanacak.
+    enum RepeatLetter: String {
+        /// Orijinal harf (s s s). Klavyenin normal davranisi; oyunlarda tusun
+        /// basili kaldigini surekli yeniden bildirdigi icin hareket kesilmez.
+        case orijinal
+        /// Turkce harf (ş ş ş).
+        case turkce
+    }
+
+    var repeatLetter: RepeatLetter {
+        get { RepeatLetter(rawValue: d.string(forKey: Key.repeatLetter.rawValue) ?? "") ?? .orijinal }
+        set { d.set(newValue.rawValue, forKey: Key.repeatLetter.rawValue); notify() }
     }
 
     /// Ac/kapat kisayolu. Kapaliysa nil.

@@ -80,6 +80,16 @@ xattr -dr com.apple.quarantine /Applications/Turkfuk.app
 **2. Erişilebilirlik izni.** Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik →
 Turkfuk. Bu izin olmadan tuşlar yakalanamaz.
 
+### Basılı tutmaya devam edince
+
+Türkçe harf çıktıktan sonra tuşu hâlâ basılı tutuyorsan klavye normalde tekrar eder.
+Turkfuk bu davranışı korur; neyin tekrarlayacağını seçebilirsin:
+
+| Seçim | Sonuç |
+|---|---|
+| Orijinal harf | `s` → `ş` → `s s s s` — klavyenin normal davranışı, oyunlarda tuş basılı sayılmaya devam eder |
+| Türkçe harf | `s` → `ş` → `ş ş ş ş` |
+
 ## Oyunlar
 
 Oyunlarda Turkfuk'u kapatman gerekir. Sebep mekanizmanın kendisi: uzun basım, tuşa

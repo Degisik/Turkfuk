@@ -83,6 +83,16 @@ xattr -dr com.apple.quarantine /Applications/Turkfuk.app
 **2. Accessibility permission.** System Settings → Privacy & Security → Accessibility →
 Turkfuk. Without it no keystrokes can be observed.
 
+### Holding past the threshold
+
+After the Turkish letter appears, a keyboard would normally start repeating if you keep
+holding. Turkfuk keeps that behaviour, and you choose what repeats:
+
+| Choice | Result |
+|---|---|
+| Original letter | `s` → `ş` → `s s s s` — normal keyboard behaviour; games keep seeing the key held |
+| Turkish letter | `s` → `ş` → `ş ş ş ş` |
+
 ## Games
 
 You need to turn Turkfuk off in games. This is inherent to press-and-hold: the gesture

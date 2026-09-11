@@ -46,6 +46,7 @@ final class MenuBarController: NSObject {
 
         menu.addItem(.separator())
         menu.addItem(mekanizmaMenusu())
+        menu.addItem(tekrarMenusu())
         menu.addItem(genelEsikMenusu())
         menu.addItem(harfEsikleriMenusu())
         menu.addItem(uygulamaIstisnalariMenusu())
@@ -161,6 +162,24 @@ final class MenuBarController: NSObject {
         return ust
     }
 
+    /// Turkce harf yazildiktan sonra tus hala basiliysa ne tekrarlanacak.
+    private func tekrarMenusu() -> NSMenuItem {
+        let r = Settings.shared.repeatLetter
+        let ust = NSMenuItem(title: "Basılı tutmaya devam edince", action: nil, keyEquivalent: "")
+        let alt = NSMenu()
+
+        let a = madde("Orijinal harf tekrarlasın   s s s", #selector(tekrarOrijinal))
+        a.state = r == .orijinal ? .on : .off
+        alt.addItem(a)
+
+        let b = madde("Türkçe harf tekrarlasın   ş ş ş", #selector(tekrarTurkce))
+        b.state = r == .turkce ? .on : .off
+        alt.addItem(b)
+
+        ust.submenu = alt
+        return ust
+    }
+
     /// Belirli uygulamalarda uzun basimi kapatir. Oyunlar icin gerekli: oyun
     /// tusun BASILI kalmasini bekler, uzun basim ise tusu tutup birakista basar.
     private func uygulamaIstisnalariMenusu() -> NSMenuItem {
@@ -258,6 +277,9 @@ final class MenuBarController: NSObject {
     @objc private func harfEsikleriSifirla() { Settings.shared.perKey = [:] }
 
     @objc private func kisayolKaldir() { Settings.shared.setHotkey(nil) }
+
+    @objc private func tekrarOrijinal() { Settings.shared.repeatLetter = .orijinal }
+    @objc private func tekrarTurkce()   { Settings.shared.repeatLetter = .turkce }
 
     @objc private func mekanizmaBeklet() { Settings.shared.mechanism = .beklet }
     @objc private func mekanizmaAnlik()  { Settings.shared.mechanism = .anlik }
