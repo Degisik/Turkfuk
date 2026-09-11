@@ -80,6 +80,20 @@ xattr -dr com.apple.quarantine /Applications/Turkfuk.app
 **2. Erişilebilirlik izni.** Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik →
 Turkfuk. Bu izin olmadan tuşlar yakalanamaz.
 
+## Oyunlar
+
+Oyunlarda Turkfuk'u kapatman gerekir. Sebep mekanizmanın kendisi: uzun basım, tuşa
+basıldığı anda harfi göndermeyip beklemek zorunda. Bir oyun ise tuşun **basılı kaldığını**
+görmek ister — Minecraft'ta `S`'yi basılı tutmak gibi. Turkfuk araya girdiğinde oyun
+mikrosaniyelik bir bas-bırak görür, karakter yürümez.
+
+İki yol var:
+
+- **Uygulama istisnası** — menü çubuğu → *Uygulama istisnaları*. Oyun önplandayken menüyü
+  açarsan en üstte *"<oyun adı> için kapat"* seçeneği çıkar. Bundan sonra o uygulamada
+  Turkfuk otomatik devre dışı kalır.
+- **Kısayol** — oynamadan önce `⌃⌥⌘T`.
+
 ## Ayarlar
 
 Menü çubuğu simgesinden:

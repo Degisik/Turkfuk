@@ -83,6 +83,20 @@ xattr -dr com.apple.quarantine /Applications/Turkfuk.app
 **2. Accessibility permission.** System Settings → Privacy & Security → Accessibility →
 Turkfuk. Without it no keystrokes can be observed.
 
+## Games
+
+You need to turn Turkfuk off in games. This is inherent to press-and-hold: the gesture
+has to withhold the letter and wait. A game instead wants to see the key **stay down** —
+holding `S` to walk backwards in Minecraft, for example. With Turkfuk in the way the game
+only sees a keypress lasting microseconds, so the character never moves.
+
+Two options:
+
+- **Per-app exception** — menu bar → *App exceptions*. Open the menu while the game is
+  frontmost and the first entry offers to disable Turkfuk for it. From then on it turns
+  itself off in that app.
+- **Shortcut** — press `⌃⌥⌘T` before you play.
+
 ## Settings
 
 From the menu bar icon:

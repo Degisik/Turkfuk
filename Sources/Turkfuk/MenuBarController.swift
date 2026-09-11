@@ -1,4 +1,5 @@
 import AppKit
+import UniformTypeIdentifiers
 
 final class MenuBarController: NSObject {
     private var statusItem: NSStatusItem?
@@ -46,6 +47,7 @@ final class MenuBarController: NSObject {
         menu.addItem(.separator())
         menu.addItem(genelEsikMenusu())
         menu.addItem(harfEsikleriMenusu())
+        menu.addItem(uygulamaIstisnalariMenusu())
 
         menu.addItem(.separator())
         let giris = madde("Girişte başlat", #selector(giristeBaslat))
@@ -131,6 +133,37 @@ final class MenuBarController: NSObject {
         return sub
     }
 
+    /// Belirli uygulamalarda uzun basimi kapatir. Oyunlar icin gerekli: oyun
+    /// tusun BASILI kalmasini bekler, uzun basim ise tusu tutup birakista basar.
+    private func uygulamaIstisnalariMenusu() -> NSMenuItem {
+        let kapali = Settings.shared.disabledApps
+        let ust = NSMenuItem(
+            title: kapali.isEmpty ? "Uygulama istisnaları" : "Uygulama istisnaları (\(kapali.count))",
+            action: nil, keyEquivalent: "")
+        let alt = NSMenu()
+
+        let onplan = LongPressEngine.shared.onplandaki
+        if !onplan.bundleID.isEmpty {
+            let acik = kapali.contains(onplan.bundleID)
+            let m = madde(acik ? "\(onplan.ad): kapalı" : "\(onplan.ad) için kapat",
+                          #selector(onplandakiniDegistir))
+            m.state = acik ? .on : .off
+            alt.addItem(m)
+            alt.addItem(.separator())
+        }
+
+        for id in kapali.sorted() {
+            let m = madde(id, #selector(istisnaKaldir))
+            m.representedObject = id
+            m.state = .on
+            alt.addItem(m)
+        }
+        if !kapali.isEmpty { alt.addItem(.separator()) }
+        alt.addItem(madde("Uygulama seç…", #selector(uygulamaSec)))
+        ust.submenu = alt
+        return ust
+    }
+
     private func madde(_ baslik: String, _ eylem: Selector) -> NSMenuItem {
         let m = NSMenuItem(title: baslik, action: eylem, keyEquivalent: "")
         m.target = self
@@ -197,6 +230,36 @@ final class MenuBarController: NSObject {
     @objc private func harfEsikleriSifirla() { Settings.shared.perKey = [:] }
 
     @objc private func kisayolKaldir() { Settings.shared.setHotkey(nil) }
+
+    @objc private func onplandakiniDegistir() {
+        let id = LongPressEngine.shared.onplandaki.bundleID
+        guard !id.isEmpty else { return }
+        var liste = Settings.shared.disabledApps
+        if let i = liste.firstIndex(of: id) { liste.remove(at: i) } else { liste.append(id) }
+        Settings.shared.disabledApps = liste
+    }
+
+    @objc private func istisnaKaldir(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        Settings.shared.disabledApps = Settings.shared.disabledApps.filter { $0 != id }
+    }
+
+    @objc private func uygulamaSec() {
+        NSApp.activate(ignoringOtherApps: true)
+        let panel = NSOpenPanel()
+        panel.message = "Turkfuk'un devre dışı kalacağı uygulamaları seç"
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.allowedContentTypes = [.application]
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        guard panel.runModal() == .OK else { return }
+
+        var liste = Settings.shared.disabledApps
+        for url in panel.urls {
+            if let id = Bundle(url: url)?.bundleIdentifier, !liste.contains(id) { liste.append(id) }
+        }
+        Settings.shared.disabledApps = liste
+    }
 
     @objc private func kisayolDegistir() {
         NSApp.activate(ignoringOtherApps: true)

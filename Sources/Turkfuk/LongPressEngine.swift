@@ -30,11 +30,13 @@ final class LongPressEngine {
     private var pending: Pending?
     private var cfTimer: CFRunLoopTimer?
 
-    /// Onplandaki uygulamanin bundle id'si. Ana is parcaciginda yazilir, tap
-    /// parcaciginda okunur; kilitle korunuyor.
+    /// Onplandaki uygulama. Ana is parcaciginda yazilir, tap parcaciginda okunur.
+    /// Turkfuk'un kendisi hic yazilmaz: menu acildiginda onplandaki uygulamanin
+    /// kimligi kaybolmasin diye.
     private let frontLock = NSLock()
-    private var _frontmost = ""
-    var frontmostBundleID: String {
+    private var _frontmost = (bundleID: "", ad: "")
+
+    var onplandaki: (bundleID: String, ad: String) {
         get { frontLock.lock(); defer { frontLock.unlock() }; return _frontmost }
         set { frontLock.lock(); _frontmost = newValue; frontLock.unlock() }
     }
@@ -141,7 +143,7 @@ final class LongPressEngine {
         if type == .keyUp {
             if let p = pending, code == p.key.keyCode {
                 cancelTimer()
-                if !p.consumed { postText(plainText(for: p)) }
+                if !p.consumed { postPlain(p) }
                 pending = nil
                 return nil                      // keyDown'i yuttugumuz icin keyUp da yutulur
             }
@@ -194,7 +196,7 @@ final class LongPressEngine {
         if Settings.shared.useOptionOutput {
             postOptionKey(p.key.keyCode, uppercase: p.uppercase)
         } else {
-            postText(p.uppercase ? p.key.upper : p.key.lower)
+            postTurkish(p)
         }
         p.consumed = true
         pending = p
@@ -204,17 +206,13 @@ final class LongPressEngine {
     private func flushPending() {
         cancelTimer()
         guard let p = pending else { return }
-        if !p.consumed { postText(plainText(for: p)) }
+        if !p.consumed { postPlain(p) }
         pending = nil
-    }
-
-    private func plainText(for p: Pending) -> String {
-        p.uppercase ? p.key.ascii.uppercased() : p.key.ascii
     }
 
     private func isActive() -> Bool {
         guard Settings.shared.enabled else { return false }
-        let front = frontmostBundleID
+        let front = onplandaki.bundleID
         return front.isEmpty || !Settings.shared.disabledApps.contains(front)
     }
 
@@ -244,14 +242,32 @@ final class LongPressEngine {
 
     // MARK: - Harf basma
 
-    /// Klavye duzeninden bagimsiz: harfi dogrudan unicode olarak yollar.
-    private func postText(_ text: String) {
+    /// Duz harf: basilan tusun kendisi gonderilir, karakteri sistem duzenden turetir.
+    private func postPlain(_ p: Pending) {
+        postKey(keyCode: p.key.keyCode, uppercase: p.uppercase, text: nil)
+    }
+
+    /// Turkce harf: ayni tus kodu, karakter unicode olarak ekleniyor.
+    private func postTurkish(_ p: Pending) {
+        postKey(keyCode: p.key.keyCode, uppercase: p.uppercase,
+                text: p.uppercase ? p.key.upper : p.key.lower)
+    }
+
+    /// Tus kodu HER ZAMAN basilan harfin gercek kodu olmali. Sabit 0 kullanmak
+    /// (ANSI'de "a" tusu) metin alanlarinda fark ettirmez ama tus kodunu okuyan
+    /// her uygulamaya — oyunlar, tus atama ekranlari — yanlis tus bildirir.
+    private func postKey(keyCode: Int64, uppercase: Bool, text: String?) {
         let src = CGEventSource(stateID: .privateState)
-        let chars = Array(text.utf16)
+        let flags: CGEventFlags = uppercase ? [.maskShift] : []
         for isDown in [true, false] {
-            guard let e = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: isDown) else { continue }
-            chars.withUnsafeBufferPointer { buf in
-                e.keyboardSetUnicodeString(stringLength: buf.count, unicodeString: buf.baseAddress)
+            guard let e = CGEvent(keyboardEventSource: src,
+                                  virtualKey: CGKeyCode(keyCode), keyDown: isDown) else { continue }
+            e.flags = flags
+            if let text {
+                let chars = Array(text.utf16)
+                chars.withUnsafeBufferPointer { buf in
+                    e.keyboardSetUnicodeString(stringLength: buf.count, unicodeString: buf.baseAddress)
+                }
             }
             e.setIntegerValueField(.eventSourceUserData, value: kTurkfukMagic)
             e.post(tap: .cgSessionEventTap)

@@ -42,8 +42,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func izleOnplandakiUygulama() {
         let wsnc = NSWorkspace.shared.notificationCenter
         let guncelle = {
-            LongPressEngine.shared.frontmostBundleID =
-                NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""
+            guard let app = NSWorkspace.shared.frontmostApplication else { return }
+            // Java ile calisan oyunlarin bundle id'si olmayabiliyor; o durumda
+            // yurutulebilir adina dusuyoruz ki istisna yine de eklenebilsin.
+            let id = app.bundleIdentifier
+                ?? app.executableURL.map { "proc:" + $0.lastPathComponent }
+                ?? ""
+            guard !id.isEmpty, id != Bundle.main.bundleIdentifier else { return }
+            LongPressEngine.shared.onplandaki = (id, app.localizedName ?? id)
         }
         guncelle()
         wsnc.addObserver(forName: NSWorkspace.didActivateApplicationNotification,
